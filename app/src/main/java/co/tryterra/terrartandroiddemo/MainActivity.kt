@@ -3,6 +3,7 @@ package co.tryterra.terrartandroiddemo
 import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
@@ -14,7 +15,6 @@ import co.tryterra.terrartandroid.Connections
 import co.tryterra.terrartandroid.DataTypes
 import co.tryterra.terrartandroid.TerraRT
 
-
 @SuppressLint("UseSwitchCompatOrMaterialCode")
 class MainActivity : AppCompatActivity(){
     private lateinit var terraRT: TerraRT
@@ -22,20 +22,24 @@ class MainActivity : AppCompatActivity(){
     @RequiresApi(Build.VERSION_CODES.O)
 
     private lateinit var googleFitConnect: Button
-    private lateinit var polarConnect: Button
-    private lateinit var wahooButton: Button
+    private lateinit var bleConnect: Button
     private lateinit var wearOSButton: Button
+    private lateinit var sensorButton: Button
+    private lateinit var antButton: Button
+
 
     private var googleConnected: Boolean = false
-    private var polarConnected: Boolean = false
-    private var wahooConnected: Boolean = false
+    private var bleConnected: Boolean = false
     private var wearOsConnected: Boolean = false
+    private var sensorConnected: Boolean = false
+    private var antConnected: Boolean = false
 
 
     private lateinit var wearOsSwitch: Switch
-    private lateinit var wahooSwitch: Switch
-    private lateinit var polarSwitch: Switch
+    private lateinit var bleSwitch: Switch
     private lateinit var googleSwitch: Switch
+    private lateinit var sensorSwitch: Switch
+    private lateinit var antSwitch: Switch
 
 
 
@@ -52,39 +56,40 @@ class MainActivity : AppCompatActivity(){
             "testingRealTimeData",
         )
         googleFitConnect = findViewById(R.id.google_fit)
-        polarConnect = findViewById(R.id.polar)
-        wahooButton = findViewById(R.id.wahoo)
+        bleConnect = findViewById(R.id.ble)
         wearOSButton = findViewById(R.id.wearos)
+        sensorButton = findViewById(R.id.sensor)
+        antButton = findViewById(R.id.ant)
 
 
-        wahooSwitch = findViewById(R.id.streamWahoo)
         googleSwitch = findViewById(R.id.streamGoogle)
         wearOsSwitch = findViewById(R.id.streamwOS)
-        polarSwitch = findViewById(R.id.streamPolar)
+        bleSwitch = findViewById(R.id.streamBLE)
+        sensorSwitch = findViewById(R.id.streamSensor)
+        antSwitch = findViewById(R.id.antSwitch)
 
 
-
-        wahooSwitch.setOnCheckedChangeListener { _, b ->
+        antSwitch.setOnCheckedChangeListener { _, b ->
             if (b){
-                terraRT.startRealtime(Connections.WAHOO, DataTypes.HEART_RATE)
+                terraRT.startRealtime(Connections.ANT, setOf(DataTypes.RR_INTERVAL))
             }
             else{
-                terraRT.stopRealtime(Connections.WAHOO)
+                terraRT.stopRealtime(Connections.ANT)
             }
         }
 
-        polarSwitch.setOnCheckedChangeListener { _, b ->
+        bleSwitch.setOnCheckedChangeListener { _, b ->
             if (b){
-                terraRT.startRealtime(Connections.POLAR, DataTypes.HEART_RATE)
+                terraRT.startRealtime(Connections.BLE, setOf(DataTypes.HEART_RATE, DataTypes.STEPS))
             }
             else{
-                terraRT.stopRealtime(Connections.POLAR)
+                terraRT.stopRealtime(Connections.BLE)
             }
         }
 
         googleSwitch.setOnCheckedChangeListener { _, b ->
             if (b){
-                terraRT.startRealtime(Connections.GOOGLE_FIT, DataTypes.STEPS)
+                terraRT.startRealtime(Connections.GOOGLE_FIT, setOf(DataTypes.STEPS, DataTypes.CALORIES))
             }
             else{
                 terraRT.stopRealtime(Connections.GOOGLE_FIT)
@@ -93,13 +98,21 @@ class MainActivity : AppCompatActivity(){
 
         wearOsSwitch.setOnCheckedChangeListener { _, b ->
             if (b){
-                terraRT.startRealtime(Connections.WEAR_OS, DataTypes.HEART_RATE)
+                terraRT.startRealtime(Connections.WEAR_OS, setOf(DataTypes.HEART_RATE))
             }
             else{
                 terraRT.stopRealtime(Connections.WEAR_OS)
             }
         }
 
+        sensorSwitch.setOnCheckedChangeListener { _, b ->
+            if (b){
+                terraRT.startRealtime(Connections.ANDROID, setOf(DataTypes.GYROSCOPE, DataTypes.ACCELERATION))
+            }
+            else{
+                terraRT.stopRealtime(Connections.ANDROID)
+            }
+        }
 
         googleFitConnect.setOnClickListener {
             if (googleConnected){
@@ -113,36 +126,51 @@ class MainActivity : AppCompatActivity(){
             }
         }
 
-        polarConnect.setOnClickListener {
-            if (polarConnected){
-                terraRT.disconnect(Connections.POLAR)
-                polarConnect.backgroundTintList = ResourcesCompat.getColorStateList(resources, R.color.button_on, null)
-                polarConnected = false
-            }
-            else {
-                terraRT.initConnection(Connections.POLAR, this)
-                terraRT.startBluetoothScan(Connections.POLAR) {
+        antButton.setOnClickListener {
+            if (antConnected){
+                terraRT.disconnect(Connections.ANT)
+                antButton.backgroundTintList = ResourcesCompat.getColorStateList(resources, R.color.button_on, null)
+                antConnected = false
+            }else {
+                terraRT.initConnection(Connections.ANT, this)
+                terraRT.startAntPlusScan{
                     if (it) {
-                        polarConnect.backgroundTintList = ResourcesCompat.getColorStateList(resources, R.color.button_off, null)
+                        antButton.backgroundTintList = ResourcesCompat.getColorStateList(resources, R.color.button_off, null)
+                        antConnected = true
                     }
                 }
-                polarConnected = true
+
             }
         }
 
-        wahooButton.setOnClickListener {
-            if(wahooConnected){
-                terraRT.disconnect(Connections.WAHOO)
-                wahooButton.backgroundTintList = ResourcesCompat.getColorStateList(resources, R.color.button_on, null)
-                wahooConnected = false
-            }else {
-                terraRT.initConnection(Connections.WAHOO, this)
-                terraRT.startBluetoothScan(Connections.WAHOO) {
+
+        bleConnect.setOnClickListener {
+            if (bleConnected){
+                terraRT.disconnect(Connections.BLE)
+                bleConnect.backgroundTintList = ResourcesCompat.getColorStateList(resources, R.color.button_on, null)
+                bleConnected = false
+            }
+            else {
+                terraRT.initConnection(Connections.BLE, this)
+                terraRT.startBluetoothScan(Connections.BLE) {
                     if (it) {
-                        wahooButton.backgroundTintList = ResourcesCompat.getColorStateList(resources, R.color.button_off, null)
+                        bleConnect.backgroundTintList = ResourcesCompat.getColorStateList(resources, R.color.button_off, null)
                     }
                 }
-                wahooConnected = true
+                bleConnected = true
+            }
+        }
+
+        sensorButton.setOnClickListener {
+            if (sensorConnected){
+                terraRT.disconnect(Connections.ANDROID)
+                sensorButton.backgroundTintList = ResourcesCompat.getColorStateList(resources, R.color.button_on, null)
+                sensorConnected = false
+            }
+            else {
+                terraRT.initConnection(Connections.ANDROID, this)
+                sensorButton.backgroundTintList = ResourcesCompat.getColorStateList(resources, R.color.button_off, null)
+                sensorConnected = true
             }
         }
 
@@ -173,8 +201,9 @@ class MainActivity : AppCompatActivity(){
     }
 
 
+
     companion object{
         const val TAG = "Terra"
-        var resource: Connections? = Connections.WAHOO
+        var resource: Connections? = Connections.BLE
     }
 }
