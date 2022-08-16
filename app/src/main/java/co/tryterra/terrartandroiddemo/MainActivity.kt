@@ -3,17 +3,14 @@ package co.tryterra.terrartandroiddemo
 import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
 import android.widget.Button
 import android.widget.Switch
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.ResourcesCompat
-import co.tryterra.terrartandroid.Connections
-import co.tryterra.terrartandroid.DataTypes
 import co.tryterra.terrartandroid.TerraRT
+import co.tryterra.terrartandroid.enums.Connections
+import co.tryterra.terrartandroid.enums.DataTypes
 
 @SuppressLint("UseSwitchCompatOrMaterialCode")
 class MainActivity : AppCompatActivity(){
@@ -49,11 +46,7 @@ class MainActivity : AppCompatActivity(){
         setContentView(R.layout.activity_main)
 
         terraRT = TerraRT(
-            userID,
-            XAPIKEY,
-            DEVID,
             this,
-            "testingRealTimeData",
         )
         googleFitConnect = findViewById(R.id.google_fit)
         bleConnect = findViewById(R.id.ble)
@@ -71,7 +64,9 @@ class MainActivity : AppCompatActivity(){
 
         antSwitch.setOnCheckedChangeListener { _, b ->
             if (b){
-                terraRT.startRealtime(Connections.ANT, setOf(DataTypes.RR_INTERVAL))
+                GenerateUserToken(XAPIKEY, DEVID, userID).getAuthToken {
+                    terraRT.startRealtime(Connections.ANT, it!!, setOf(DataTypes.RR_INTERVAL))
+                }
             }
             else{
                 terraRT.stopRealtime(Connections.ANT)
@@ -80,7 +75,9 @@ class MainActivity : AppCompatActivity(){
 
         bleSwitch.setOnCheckedChangeListener { _, b ->
             if (b){
-                terraRT.startRealtime(Connections.BLE, setOf(DataTypes.HEART_RATE, DataTypes.STEPS))
+                GenerateUserToken(XAPIKEY, DEVID, userID).getAuthToken {
+                    terraRT.startRealtime(Connections.BLE, it!!, setOf(DataTypes.HEART_RATE, DataTypes.STEPS))
+                }
             }
             else{
                 terraRT.stopRealtime(Connections.BLE)
@@ -89,7 +86,9 @@ class MainActivity : AppCompatActivity(){
 
         googleSwitch.setOnCheckedChangeListener { _, b ->
             if (b){
-                terraRT.startRealtime(Connections.GOOGLE_FIT, setOf(DataTypes.STEPS, DataTypes.CALORIES))
+                GenerateUserToken(XAPIKEY, DEVID, userID).getAuthToken {
+                    terraRT.startRealtime(Connections.GOOGLE_FIT, it!!, setOf(DataTypes.STEPS, DataTypes.CALORIES))
+                }
             }
             else{
                 terraRT.stopRealtime(Connections.GOOGLE_FIT)
@@ -98,7 +97,9 @@ class MainActivity : AppCompatActivity(){
 
         wearOsSwitch.setOnCheckedChangeListener { _, b ->
             if (b){
-                terraRT.startRealtime(Connections.WEAR_OS, setOf(DataTypes.HEART_RATE))
+                GenerateUserToken(XAPIKEY, DEVID, userID).getAuthToken {
+                    terraRT.startRealtime(Connections.WEAR_OS, it!!, setOf(DataTypes.HEART_RATE))
+                }
             }
             else{
                 terraRT.stopRealtime(Connections.WEAR_OS)
@@ -107,7 +108,9 @@ class MainActivity : AppCompatActivity(){
 
         sensorSwitch.setOnCheckedChangeListener { _, b ->
             if (b){
-                terraRT.startRealtime(Connections.ANDROID, setOf(DataTypes.GYROSCOPE, DataTypes.ACCELERATION))
+                GenerateUserToken(XAPIKEY, DEVID, userID).getAuthToken {
+                    terraRT.startRealtime(Connections.ANDROID, it!!, setOf(DataTypes.GYROSCOPE, DataTypes.ACCELERATION))
+                }
             }
             else{
                 terraRT.stopRealtime(Connections.ANDROID)
@@ -199,7 +202,6 @@ class MainActivity : AppCompatActivity(){
     public override fun onResume(){
         super.onResume()
     }
-
 
 
     companion object{
